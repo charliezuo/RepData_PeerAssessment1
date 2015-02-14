@@ -1,20 +1,21 @@
 ---
-title: "PA1_template.rmd"
-author: "Charlie"
+title: "RR_PA1.rmd"
+author: "Charlie Zuo"
+output: html_document
 ---
 
-### Getting and Cleaning the Activity Dataset
+## Loading and preprocessing the Activity Dataset
 
 ```{r, echo=TRUE}
-#setwd("C:/Users/Charlie/Desktop/Data Science/Reproducible Research/repdata-data-activity")
+setwd("C:/Users/Charlie/Desktop/Data Science/Reproducible Research/repdata-data-activity")
 repdata <- read.csv ("activity.csv", sep=",")
 dates <- as.Date(repdata[,2],format="%Y-%m-%d")
 repdata1 <- cbind(repdata, dates)
 head(repdata1)
 ```
 
-### Calculating the mean and median steps taken per day  
-**For the calculations, we summarize dataset with the very useful reshape2 package**
+## What is mean total number of steps taken per day?  
+**For the calculations, we summarize this dataset with the very useful reshape2 package**
 
 ```{r, echo=TRUE}
 require(reshape2)
@@ -25,7 +26,7 @@ hist(as.numeric(newsum[,1]), main = "Steps Per Day", xlab="", col="blue")
 mean(newsum[,1])
 median(newsum[,1])
 ```
-
+## What is the average daily activity pattern?
 **Time Series Plot for average number of steps taken, and Calculating the interval contains maximum number of steps**
 ```{r, echo=TRUE}
 require(reshape2)
@@ -35,7 +36,8 @@ plot(alldays, type="l",lwd="3",cex=288, col='red')
 head(alldays[order(alldays$steps,decreasing=TRUE),], n=1L)
 ```
 
-**Total number of rows with `NA`s**
+## Imputing missing values
+**Total number of rows with `NAs`**
 
 ```{r, echo=TRUE}
 length(repdata[is.na(repdata)])
@@ -70,9 +72,18 @@ median(newsum2[,1])
 ```
 **We can conclude mean value did not differ from the first part of the assignment, but median value now is the same as mean value. In the first part of assignment, mean and median were not the same.**
 
-```{r, echo=TRUE}
-Day <- weekdays(repdata2$date)
-Day <- data.frame(Day)
+## Are there differences in activity patterns between weekdays and weekends?
 
+```{r, echo=TRUE}
+library(lattice)
+Day <- weekdays(repdata2$date)
+Day[Day=="Sunday"|Day=="Saturday"] <- 'Weekend'
+Day[Day!="Weekend"] <- 'Weekday'
+Day <- data.frame(Day)
+repdata3 <- cbind(repdata2,Day)
+head(repdata3)
+sumdata3 <- melt(repdata3, id.vars = c("interval","Day"), measure.vars="steps", na.rm = TRUE)
+weekdata <- dcast(sumdata3, interval + Day ~ variable, mean)
+xyplot(steps ~ interval|Day, weekdata,type='l',layout = c(1,2),xlab = 'Interval', ylab = 'Number of Steps')
 ```
 
